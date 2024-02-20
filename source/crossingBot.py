@@ -2,8 +2,7 @@ import asyncio
 import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
-from crossing import Crossing
-from crossing_updater import CrossingUpdater
+from crossing import Crossing, CrossingUpdater, CrossingUpdaterFactory
 from config_reader import config
 from datetime import datetime
 
@@ -23,14 +22,14 @@ async def cmd_start(message: types.Message):
 
 @dp.message(Command("state"))
 async def cmd_state(message: types.Message, crs: Crossing):
-    resp = crs.getState(datetime.now())
+    resp = crs.get_state(datetime.now())
     for line in resp:
         await message.answer(line)
 
 # Запуск процесса поллинга новых апдейтов
 async def main():
     c = Crossing()
-    cu = CrossingUpdater(c)
+    cu = CrossingUpdaterFactory().create_updater(c)
     task = asyncio.create_task(cu.update_task())
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, crs=c)
