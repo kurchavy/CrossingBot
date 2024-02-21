@@ -1,12 +1,9 @@
 from datetime import datetime, timedelta
-from pytz import timezone
+from dateutil import tz
 from bs4 import BeautifulSoup
 import requests
 import logging
 import json
-
-def _get_current_date(tz='Europe/Moscow'):
-    return datetime.now().astimezone(timezone(tz))
 
 class IntervalCreatorJson:
     """
@@ -18,17 +15,33 @@ class IntervalCreatorJson:
 
     def get_timetable(self, date = None):
         if date == None:
-            date = _get_current_date()
+            date = datetime.now(tz.gettz("Europe/Moscow")).date()
         fname = "workday.json"
         if date.weekday() > 4:
             fname = "weekend.json"
 
         with open(fname, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        date = _get_current_date().date()
-        tt = list(map(lambda t: [datetime.combine(date, datetime.strptime(t[0], '%H:%M:%S').time()), datetime.combine(date, datetime.strptime(t[1], '%H:%M:%S').time())], data))
+
+        tt = list(
+            map(
+                lambda t: [
+                    datetime.combine(
+                        date,
+                        datetime.strptime(t[0], "%H:%M:%S").time(),
+                        tzinfo=tz.gettz("Europe/Moscow")
+                    ),
+                    datetime.combine(
+                        date,
+                        datetime.strptime(t[1], "%H:%M:%S").time(),
+                        tzinfo=tz.gettz("Europe/Moscow")
+                    ),
+                ],
+                data,
+            )
+        )
         return tt
-            
+
 class IntervalCreatorTuTuRu:
     """
     tutu.ru Interval creator (using BeautifulSoup to parse html)  
@@ -45,21 +58,21 @@ class IntervalCreatorTuTuRu:
         lst += self.get_oneway_intervals(html, 0, 1)
 
         return self.adjust_intervals(sorted(lst, key=lambda l: l[0]), 7)
-    
+
     def get_html(self, st1 = 45707, st2 = 45607, date = None):
         urladd = "" if date == None else f"&date={date:%d.%m.%y}"
         url = f"https://www.tutu.ru/rasp.php?st1={st1}&st2={st2}" + urladd
         response = requests.get(url)
         logging.debug(f'Got html from {url}')
         return response.text
-    
+
     def get_oneway_intervals(self, html, depcorr = 0, arrcorr = 0):
         soup = BeautifulSoup(html, 'html.parser')
         dep_links = soup.find_all('a', class_= lambda v: v and v.startswith("g-link desktop__depTimeLink"))
         arr_links = soup.find_all('a', class_= lambda v: v and v.startswith("g-link desktop__arrTimeLink"))
         logging.debug(f'Got {len(dep_links)} departures and {len(arr_links)} arrivals from html')
         lst = []
-        tod = _get_current_date().date()
+        tod = datetime.now(tz.gettz("Europe/Moscow")).date()
         timelast = datetime.strptime("00:00", "%H:%M").time()
         for (d, a) in zip(dep_links, arr_links):
             timedep = datetime.strptime(d.text, "%H:%M").time()
@@ -79,12 +92,16 @@ class IntervalCreatorTuTuRu:
 
             timelast = timearr
 
-            lst.append([datetime.combine(datedep, timedep) + timedelta(minutes=depcorr), 
-                        datetime.combine(datearr, timearr) + timedelta(minutes=arrcorr)])
-        
+            lst.append(
+                [
+                    datetime.combine(datedep, timedep, tzinfo=tz.gettz("Europe/Moscow")) + timedelta(minutes=depcorr),
+                    datetime.combine(datearr, timearr, tzinfo=tz.gettz("Europe/Moscow")) + timedelta(minutes=arrcorr),
+                ]
+            )
+
         logging.debug(f'Got {len(lst)} intervals from html')
         return lst
-    
+
     def adjust_intervals(self, ilist, maxgap):
         res = []
         skip = False

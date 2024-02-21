@@ -2,9 +2,9 @@ import asyncio
 import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
-from crossing import Crossing, CrossingUpdater, CrossingUpdaterFactory
+from crossing_updater import CrossingUpdaterFactory
+from crossing_model import Crossing
 from config_reader import config
-from datetime import datetime
 
 # Включаем логирование, чтобы не пропустить важные сообщения
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +22,7 @@ async def cmd_start(message: types.Message):
 
 @dp.message(Command("state"))
 async def cmd_state(message: types.Message, crs: Crossing):
-    resp = crs.get_state(datetime.now())
+    resp = crs.get_currnet_state()
     for line in resp:
         await message.answer(line)
 

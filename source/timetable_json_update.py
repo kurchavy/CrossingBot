@@ -1,7 +1,6 @@
-from datetime import datetime, timedelta
-from pytz import timezone, UTC
+from datetime import datetime
 import json
-from crossing import IntervalCreatorTuTuRu
+from crossing_updater import IntervalCreatorTuTuRu
 
 # export to json
 ic = IntervalCreatorTuTuRu()
