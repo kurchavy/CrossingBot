@@ -7,7 +7,11 @@ from crossing_model import Crossing
 from config_reader import config
 
 # Включаем логирование, чтобы не пропустить важные сообщения
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.DEBUG,
+    handlers=[logging.FileHandler("debug.log"), logging.StreamHandler()],
+)
+
 # Объект бота
 bot = Bot(token=config.bot_token.get_secret_value(), parse_mode='HTML')
 
@@ -30,7 +34,13 @@ async def cmd_state(message: types.Message, crs: Crossing):
 async def main():
     c = Crossing()
     cu = CrossingUpdaterFactory().create_updater(c)
-    task = asyncio.create_task(cu.update_task())
+    task_upd = asyncio.create_task(cu.update_task())
+    logging.debug("Crossing infrastructure created, updater started")
+
+    # logging.debug('about to sleep 10 sec')
+    # await asyncio.sleep(10)
+    # logging.debug("Done!")
+    # re = input('Enter smth to leave: ')
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, crs=c)
 
