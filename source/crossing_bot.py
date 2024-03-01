@@ -22,7 +22,7 @@ async def cmd_start(message: types.Message):
 
 @dp.message(Command("state"))
 async def cmd_state(message: types.Message, crs: Crossing):
-    resp = crs.get_currnet_state()
+    resp = crs.get_current_state()
     for line in resp:
         await message.answer(line)
 

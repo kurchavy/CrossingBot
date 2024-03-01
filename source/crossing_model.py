@@ -42,7 +42,7 @@ class Crossing:
                 else:
                     res.append(f"Затем закроется в {iv.startTime:%H:%M} (через {self._min_to_str(t)}) на {iv.length} мин")
             if r == 0:
-                res.append(f"Переезд закрыт. Откроется в {iv.endTime:'%H:%M'} (через {self._min_to_str(t)})")
+                res.append(f"Переезд закрыт. Откроется в {iv.endTime:%H:%M} (через {self._min_to_str(t)})")
             if r == 1:
                 continue
         if len(res) == 0:

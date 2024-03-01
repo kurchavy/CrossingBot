@@ -17,4 +17,4 @@ class Interval:
             return (-1, self.get_minutes(self.startTime - time_to_check))
         if time_to_check > self.endTime:
             return (1, 0)
-        return (0, self.get_minutes(self.endTime, time_to_check))
+        return (0, self.get_minutes(self.endTime - time_to_check))
