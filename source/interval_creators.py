@@ -20,7 +20,7 @@ class IntervalCreatorJson:
         if date.weekday() > 4:
             fname = "weekend.json"
 
-        with open(fname, 'r', encoding='utf-8') as f:
+        with open(f"./crossing-data/{fname}", 'r', encoding='utf-8') as f:
             data = json.load(f)
 
         tt = list(
