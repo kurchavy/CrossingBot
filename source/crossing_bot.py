@@ -9,6 +9,8 @@ from config_reader import config
 # Включаем логирование, чтобы не пропустить важные сообщения
 logging.basicConfig(
     level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s %(module)s : %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
     handlers=[logging.FileHandler("debug.log"), logging.StreamHandler()],
 )
 
@@ -27,6 +29,7 @@ async def cmd_start(message: types.Message):
 @dp.message(Command("state"))
 async def cmd_state(message: types.Message, crs: Crossing):
     resp = crs.get_current_state()
+    logging.debug(f'Request state from user {message.from_user.full_name}')
     for line in resp:
         await message.answer(line)
 
@@ -37,10 +40,6 @@ async def main():
     task_upd = asyncio.create_task(cu.update_task())
     logging.debug("Crossing infrastructure created, updater started")
 
-    # logging.debug('about to sleep 10 sec')
-    # await asyncio.sleep(10)
-    # logging.debug("Done!")
-    # re = input('Enter smth to leave: ')
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, crs=c)
 
