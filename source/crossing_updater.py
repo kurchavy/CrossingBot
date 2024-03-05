@@ -19,12 +19,12 @@ class CrossingUpdater:
         self.i_creators = i_creators
         self.list_tom = []
 
-    def get_timetable(self, date = None):
+    async def get_timetable(self, date = None):
         for crt in self.i_creators:
             name = crt.__class__.__name__
             try: 
                 logging.debug(f"Trying to get timetable from {name}...")
-                tt = crt.get_timetable(date) 
+                tt = await crt.get_timetable(date) 
                 logging.info(f"Got timetable from {name}")
                 return tt
             except:
@@ -32,7 +32,7 @@ class CrossingUpdater:
         logging.error("Unable to get crossing timetable")
         raise ValueError("Fail to get crossing timetable") 
 
-    def update_cycle(self):
+    async def update_cycle(self):
         date_now = datetime.now(tz.gettz("Europe/Moscow"))
 
         # нужно очистить расписание, если > 03:00 и расписание старое (или его нет)
@@ -47,15 +47,15 @@ class CrossingUpdater:
                 self.list_tom = []
             else:
                 # нет никакого расписания
-                self.crs.update_intervals(date_now.date(), self.get_timetable())
+                self.crs.update_intervals(date_now.date(), await self.get_timetable())
 
         # нужно подгрузить расписание на завтра (еще не загружено)
         if date_now.hour >= 22 and len(self.list_tom) == 0:
             tom = date_now + timedelta(days=1)
-            self.list_tom = self.get_timetable(tom)
+            self.list_tom = await self.get_timetable(tom)
 
     async def update_task(self):
         while True:
-            self.update_cycle()
+            await self.update_cycle()
             await asyncio.sleep(30)
 

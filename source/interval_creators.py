@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import requests
 import logging
 import json
+import asyncio
 
 class IntervalCreatorJson:
     """
@@ -13,7 +14,7 @@ class IntervalCreatorJson:
     def __init__(self):
         pass
 
-    def get_timetable(self, date = None):
+    async def get_timetable(self, date = None):
         if date == None:
             date = datetime.now(tz.gettz("Europe/Moscow")).date()
         fname = "workday.json"
@@ -50,19 +51,23 @@ class IntervalCreatorTuTuRu:
     def __init__(self):
         pass
 
-    def get_timetable(self, date = None):
-        html = self.get_html(45607, 45707, date)
+    async def get_timetable(self, date = None):
+        html = await self.get_html(45607, 45707, date)
         lst = self.get_oneway_intervals(html, -1, 0)
 
-        html = self.get_html(45707, 45607, date)
+        html = await self.get_html(45707, 45607, date)
         lst += self.get_oneway_intervals(html, 0, 1)
 
         return self.adjust_intervals(sorted(lst, key=lambda l: l[0]), 7)
 
-    def get_html(self, st1 = 45707, st2 = 45607, date = None):
+    async def get_html(self, st1 = 45707, st2 = 45607, date = None):
         urladd = "" if date == None else f"&date={date:%d.%m.%y}"
         url = f"https://www.tutu.ru/rasp.php?st1={st1}&st2={st2}" + urladd
-        response = requests.get(url)
+        logging.debug(f'Getting html from {url}')
+        response = await asyncio.to_thread(requests.get, url)
+        if response.status_code != requests.codes.ok:
+            logging.warn(f'Status code = {response.status_code}')
+            response.raise_for_status()
         logging.debug(f'Got html from {url}')
         return response.text
 

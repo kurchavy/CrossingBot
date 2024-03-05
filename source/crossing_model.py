@@ -24,7 +24,7 @@ class Crossing:
         self.date = date
         logging.info(f"Updated crossing intervals for {self.date:%d.%m.%y}: added {len(self.intervals)} intervals")
 
-    def _compute_state(self, time_to_check: datetime, period=60):
+    def _compute_state(self, time_to_check: datetime, period):
         logging.debug(f"Requested Crossing state for {time_to_check} (period = {period})")
         temp_intervals = self.intervals.copy()
 
