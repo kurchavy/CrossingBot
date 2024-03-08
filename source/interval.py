@@ -7,7 +7,7 @@ class Interval:
         self.length = self.get_minutes(et - st)
 
     def __str__(self) -> str:
-        return f"{self.length} min [{self.startTime:'%H:%M'} - {self.endTime:'%H:%M'}]"
+        return f"{self.length} min [{self.startTime:%d/%m/%Y %H:%M} - {self.endTime:%d/%m/%Y %H:%M}]"
 
     def get_minutes(self, td: timedelta):
         return round((td.seconds) / 60)

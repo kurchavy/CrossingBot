@@ -43,6 +43,20 @@ async def cmd_users(message: types.Message, usr: dict[int, int]):
     for itm in usr.items():
         await message.answer(f"{itm[0]} - {itm[1]} запр.")
 
+@dp.message(Command("intervals"))
+async def cmd_intervals(message: types.Message, crs: Crossing):
+    user_key = f"{message.from_user.full_name}|{message.from_user.id}"
+    logging.debug(f'Request users from {user_key}')
+    if message.from_user.id != config.my_id:
+        await message.answer(f"Информация недоступна", reply_markup=get_now_8_5_kb())
+        return
+    await message.answer(f"Загруженные интервалы:")
+    for itv in crs.intervals:
+        await message.answer(f"{itv}")
+    
+
+
+
 @dp.message(Command("state"))
 async def cmd_state(message: types.Message, crs: Crossing, usr: dict[int, int]):
     resp = crs.get_current_state(period=config.time_period)

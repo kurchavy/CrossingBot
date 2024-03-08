@@ -35,27 +35,24 @@ class CrossingUpdater:
     async def update_cycle(self):
         date_now = datetime.now(tz.gettz("Europe/Moscow"))
 
-        # нужно очистить расписание, если > 03:00 и расписание старое (или его нет)
-        if date_now.hour >= 3 and self.crs.date != date_now.date():
-            self.crs.clear_intervals()
-
-        # нет расписания
+        # Расписание на сегодня не загружено
         if self.crs.date == None:
-            if len(self.list_tom) != 0:
-                # если есть расписание на завтра, загрузить его и стереть
-                self.crs.update_intervals(date_now.date(), self.list_tom)
-                self.list_tom = []
-            else:
-                # нет никакого расписания
-                self.crs.update_intervals(date_now.date(), await self.get_timetable())
+            logging.debug("No today timetable. Trying to acquire")
+            rsp = await self.get_timetable()
+            self.crs.update_intervals(date_now.date(), rsp)
+            logging.debug("Today timetable uploded to crossing model")
 
-        # нужно подгрузить расписание на завтра (еще не загружено)
-        if date_now.hour >= 22 and len(self.list_tom) == 0:
-            tom = date_now + timedelta(days=1)
-            self.list_tom = await self.get_timetable(tom)
+        # Сменилась дата и время > 03:00
+        if (date_now.date() - self.crs.date).days > 0 and date_now.hour >= 3:
+            logging.debug("Time to upload new timetable. Trying to acquire")
+            rsp = await self.get_timetable()
+            self.crs.clear_intervals()
+            self.crs.update_intervals(date_now.date(), rsp)
+            logging.debug("New timetable uploded to crossing model")
+        
 
     async def update_task(self):
         while True:
             await self.update_cycle()
-            await asyncio.sleep(30)
+            await asyncio.sleep(300)
 
